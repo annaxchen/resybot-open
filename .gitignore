@@ -1,0 +1,69 @@
+# User-specific configuration files
+proxies.json
+tasks.json
+info.json
+resrevations.json
+accounts.json
+license_key.json
+**/suspicious_commits.txt
+
+# Python cache files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+.venv
+*-venv/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Log files
+*.log
+logs/
+
+# Local development
+.env.local
+.env.development.local
+
+# Build artifacts
+*.spec 
