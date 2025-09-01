@@ -62,6 +62,10 @@ def menu():
                           carousel=True)
         ]
         answers = inquirer.prompt(questions)
+        
+        # Handle case where user cancels (Ctrl+C)
+        if answers is None:
+            break
 
         if answers['choice'].startswith('1'):
             show_tasks()
@@ -106,6 +110,10 @@ def show_tasks():
                           carousel=True)
         ]
         answers = inquirer.prompt(questions)
+        
+        # Handle case where user cancels (Ctrl+C)
+        if answers is None:
+            break
 
         if answers['task_choice'] == 'a) Add task':
             add_task()
@@ -938,7 +946,12 @@ def run_task_with_timeout(task_index, duration, job_id):
     }
     
     try:
-        run_tasks_concurrently([task], info['capsolver_key'], info['capmonster_key'], proxies, info['discord_webhook'])
+        # Get values with defaults for missing keys
+        capsolver_key = info.get('capsolver_key', '')
+        capmonster_key = info.get('capmonster_key', '')
+        discord_webhook = info.get('discord_webhook', '')
+        
+        run_tasks_concurrently([task], capsolver_key, capmonster_key, proxies, discord_webhook)
     except Exception as e:
         print(f"Error starting scheduled task: {e}")
     finally:
@@ -1037,7 +1050,12 @@ def start_tasks():
         return
 
     try:
-        run_tasks_concurrently(tasks, info['capsolver_key'], info['capmonster_key'], proxies, info['discord_webhook'])
+        # Get values with defaults for missing keys
+        capsolver_key = info.get('capsolver_key', '')
+        capmonster_key = info.get('capmonster_key', '')
+        discord_webhook = info.get('discord_webhook', '')
+        
+        run_tasks_concurrently(tasks, capsolver_key, capmonster_key, proxies, discord_webhook)
     except Exception as e:
         print(f"Error starting tasks: {e}")
     

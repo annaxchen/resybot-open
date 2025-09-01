@@ -7,11 +7,32 @@ from urllib.parse import quote
 
 
 def format_proxy(proxy_str):
-    ip, port, user, password = proxy_str.split(':')
-    return {
-        'http': f'http://{user}:{password}@{ip}:{port}',
-        'https': f'http://{user}:{password}@{ip}:{port}',
-    }
+    # Handle different proxy formats
+    if '@' in proxy_str:
+        # Format: username:password@ip:port
+        auth_part, ip_port = proxy_str.split('@', 1)
+        user_pass = auth_part.split(':', 1)
+        if len(user_pass) == 2:
+            user, password = user_pass
+            ip, port = ip_port.split(':')
+            return {
+                'http': f'http://{user}:{password}@{ip}:{port}',
+                'https': f'http://{user}:{password}@{ip}:{port}',
+            }
+        else:
+            # Fallback to no auth
+            ip, port = ip_port.split(':')
+            return {
+                'http': f'http://{ip}:{port}',
+                'https': f'http://{ip}:{port}',
+            }
+    else:
+        # Format: ip:port (no authentication)
+        ip, port = proxy_str.split(':')
+        return {
+            'http': f'http://{ip}:{port}',
+            'https': f'http://{ip}:{port}',
+        }
 
 def execute_task(task, capsolver_key, capmonster_key, proxies, webhook_url):
     auth_token = task['auth_token']
@@ -41,14 +62,19 @@ def execute_task(task, capsolver_key, capmonster_key, proxies, webhook_url):
 
     while True:
         try:
+            print(f"🔍 Checking restaurant {restaurant_id} for {party_sz} people on {start_date} to {end_date}...")
             select_proxy = format_proxy(random.choice(proxies))
 
             url = f"https://api.resy.com/4/venue/calendar?venue_id={restaurant_id}&num_seats={party_sz}&start_date={start_date}&end_date={end_date}"
+            print(f"📡 Making API request to: {url}")
             response = requests.get(url, headers=headers, proxies=select_proxy)
 
             if response.status_code != 200:
+                print(f"❌ API request failed: {response.status_code} - {response.text}")
                 send_discord_notification(webhook_url, f'(1) Failed to get availability for restaurant {restaurant_id} - {response.text} - {response.status_code}')
                 return
+            
+            print(f"✅ API request successful: {response.status_code}")
             
             data = response.json()
             if 'scheduled' not in data:
@@ -149,8 +175,16 @@ def book_reservation(book_token, auth_token, payment_id, day, party_size, restau
     return response.json()
         
 def send_discord_notification(webhook_url, message):
-    data = {"content": message}
-    requests.post(webhook_url, json=data)
+    # Only send notification if webhook URL is provided and not empty
+    if webhook_url and webhook_url.strip():
+        try:
+            data = {"content": message}
+            requests.post(webhook_url, json=data)
+        except Exception as e:
+            print(f"Failed to send Discord notification: {e}")
+    else:
+        # Print the message locally if no webhook is configured
+        print(f"NOTIFICATION: {message}")
 
 def run_tasks_concurrently(tasks, capsolver_key, capmonster_key, proxies, webhook_url):
     with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
